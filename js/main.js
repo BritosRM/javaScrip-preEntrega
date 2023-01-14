@@ -1,78 +1,142 @@
-const presupuesto = () => {
-    let producto = ""
-    let metros = 0
-    let precio = 0
-    let totalPresupuesto = 0
-    let entrega = ''
-
-        do {
-            alert('Realizamos presupuestos por metro de cables de: \nalta tension (10mm), media tension (4mm) y baja tension (1.5mm)');
-            producto = prompt('¿Que cable desea presupuestar? \n"alta tension", "media tension" o "baja tension"');
-            metros = parseInt(prompt('Ingrese los metros que desea'));
+// Array de lista presupuesto
+const presupuesto = []
 
 
-            let metrosdValidados = validarMetros(metros);
+
+// Orden de productos
+const ordenMenaMay = () => {
+    productos.sort((a, b) => a.precio - b.precio)
+    mostrarLista()
+}
+
+const ordenMayaMen = () => {
+    productos.sort((a, b) => b.precio - a.precio)
+    mostrarLista()
+}
 
 
-            switch (producto) {
-                case 'alta tension':
-                    precio = 1000;
-                    break;
-                case 'media tension':
-                    precio = 500;
-                    break;
-                case 'baja tension':
-                    precio = 150;
-                    break;
-                default:
-                    alert('Tipo de clabe mal ingresado');
-                    precio = 0;
-                    metros = 0;
+
+// Agregar productos al presupueto 
+const agregarProductos = (producto, productoId, metrosCable) => {
+    const productoRepetido = presupuesto.find(producto => producto.id === productoId)
+
+    if (productoRepetido) {
+        productoRepetido.metros += metrosCable
+    } else {
+        producto.metros += metrosCable
+        presupuesto.push(producto)
+    }
+    
+    console.log(presupuesto)
+}
+
+
+
+// Muestra de lista
+const mostrarLista = () => {
+    const lista = productos.map(producto => {
+        return '- '+producto.nombre+' de '+producto.tension+' tension $'+producto.precio+' por metro (+iva)'
+    })
+    alert('Lista de productos disponibles: '+'\n\n'+lista.join('\n'))
+    seleccionarProductos(lista)
+}
+
+
+
+// Ingreso de productos a presupuestar
+const seleccionarProductos = (lista) => {
+    tensionCable = ''
+    metrosCable = 0
+    otroProducto = false
+
+    do {
+        tensionCable = prompt('¿Que tension de cable necesita?'+'\n\n'+lista.join('\n'))
+        metrosCable = parseInt(prompt('¿Cuantos metros necesita?'))
+
+        cable = productos.find(cable => cable.tension.toLocaleLowerCase() === tensionCable.toLocaleLowerCase())
+
+        if (cable) {
+            agregarProductos(cable, cable.id, metrosCable)
+        } else {
+            alert('El cable no se encuentra en el catalogo')
+        }
+
+        otroProducto = confirm('Agregar otro producto')
+    } while (otroProducto);
+    confirmarPresupuesto()
+}
+
+
+
+
+// Eliminar productos del presupuesto
+const eliminarProducto = (cableAEliminar, metrosAEliminar) => {
+    presupuesto.forEach((cable, index) => {
+        if (cable.tension.toLocaleLowerCase() === cableAEliminar.toLocaleLowerCase()){
+            if (cable.metros > metrosAEliminar) {
+                cable.metros -= metrosAEliminar
+            } else {
+                presupuesto.splice(index, 1)
             }
-
-            totalPresupuesto = precio * metrosdValidados
-            alert('El total del presupuesto de ' +metros+ 'm de cable de ' +producto+ ' es de $' +totalPresupuesto)
-
-
-            let entrega = plazoDeEntrega(producto, metros)
-            alert('El plazo de entrega es ' +entrega)
-
+            
         }
-
-
-
-        while(false)
-}
-
-const validarMetros = (metros) => {
-    while (Number.isNaN(metros) || metros === 0) {
-        if (metros !== 0) {
-            alert('Debe ingresar un numero')
-        }
-        else {
-            alert('La cantidad debe ser mayor a 0')
-        }
-        parseInt(prompt('Ingrese nuevamente la cantidad que desea'));
-    }
-    return metros;
+    })
+    confirmarPresupuesto()
 }
 
 
-const plazoDeEntrega = (producto, metros) => {
-    if (producto === 'baja tension' & metros <= 100) {
-        entrega = 'inmediato'
+
+// Confirmacion de presupuesto
+const confirmarPresupuesto = () => {
+    const listaPresupuesto = presupuesto.map(cable => {
+        return '- '+cable.metros+'m de Cable de '+cable.tension+' tension'
+    })
+
+    const checkout = confirm('Presupuesto: '
+    +'\n\n'+listaPresupuesto.join('\n')
+    +'\n\nPara confirmar el presupuesto precione aceptar o Cancelar para eliminar un producto'
+    )
+
+    if (checkout) {
+        presupuestoFinal(listaPresupuesto)
+    } else {
+        const productoAEliminar = prompt('Ingrese la tension del cable que desea eliminar')
+        const cantidadDeMetrosAEliminar = prompt('Ingrese los metros que desea eliminar')
+
+        eliminarProducto(productoAEliminar, cantidadDeMetrosAEliminar)
     }
-    else if  (producto === 'media tension' & metros <= 50) {
-        entrega = 'inmediato'
-    }
-    else if  (producto === 'media tension' & metros <= 100) {
-        entrega = 'de 7 a 15 dias'
-    }
-    else {
-        entrega = '30 dias'
-    }
-    return entrega;
 }
 
 
-presupuesto();
+
+// Mostrar presupuesto
+const presupuestoFinal = (listaPresupuesto) => {
+    const precioTotal = presupuesto.reduce((acc , item) => acc +item.metros * item.precio, 0)
+
+    alert('Su presupuesto: '
+    +'\n\n'+listaPresupuesto.join('\n')
+    +'\n\nSubtotal: $'+precioTotal
+    +'\nIva: $'+precioTotal * 0.21
+    +'\nTotal: $'+precioTotal * 1.21    
+    +'\n\nLapso estimativo de entrega 7 dias habiles'
+    
+    )
+}
+
+
+
+// Seleccion de orden
+const orden = () => {
+    const ordenDeProductos = confirm('¿Desear ordenar los productos de menor a mayor precio?')
+
+    if (ordenDeProductos) {
+        ordenMenaMay()
+    } else {
+        ordenMayaMen()
+    }
+}
+
+
+
+// Ejecucion
+orden()
